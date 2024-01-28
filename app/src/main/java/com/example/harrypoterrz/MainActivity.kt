@@ -1,5 +1,7 @@
 package com.example.harrypoterrz
 
+import ApiResponse
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -23,6 +25,8 @@ class MainActivity : AppCompatActivity() {
         binding.recyclerview.layoutManager = LinearLayoutManager(this)
 
         getAllCharacters()
+
+
     }
 
     private fun getAllCharacters() {
@@ -36,26 +40,30 @@ class MainActivity : AppCompatActivity() {
                         val responseBody = response.body()
                         if (responseBody != null) {
                             data.addAll(responseBody)
-                            val adapter = CharacterAdapter(data)
+                            val adapter = CharacterAdapter(data, this@MainActivity)
+                            adapter.setOnClickListener(object : CharacterAdapter.OnClickListener {
+                                override fun onClick(position: Int, model: ApiResponse) {
+                                    val intent = Intent(this@MainActivity, DetailsActivity::class.java)
+                                    intent.putExtra("character", model)
+                                    startActivity(intent)
+                                }
+                            })
                             binding.recyclerview.adapter = adapter
+
                         } else {
-                            // Obsługa sytuacji, gdy responseBody jest null
                             Snackbar.make(binding.root, "Empty response body", Snackbar.LENGTH_LONG).show()
                         }
                     } else {
-                        // Obsługa sytuacji, gdy odpowiedź zwróciła błąd
                         Snackbar.make(binding.root, "Failed to fetch data", Snackbar.LENGTH_LONG).show()
                     }
                 } catch (ex: Exception) {
                     ex.printStackTrace()
-                    // Wyświetl komunikat o błędzie dla użytkownika
                     Snackbar.make(binding.root, "Error processing data", Snackbar.LENGTH_LONG).show()
                 }
             }
 
             override fun onFailure(call: Call<List<ApiResponse>>, t: Throwable) {
                 Log.e("Failed", "Api Failed" + t.message)
-                // Wyświetl komunikat o błędzie dla użytkownika
                 Snackbar.make(binding.root, "Error fetching data", Snackbar.LENGTH_LONG).show()
             }
         })
